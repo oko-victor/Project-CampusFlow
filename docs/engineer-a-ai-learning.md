@@ -46,3 +46,14 @@ This document records **AI-assisted work performed in this conversation** and li
 - [ ] Engineer A explains one recommendation independently improved or rejected and why.
 - [ ] Engineer B completes personal verification in their PR #6 learning entries.
 - [ ] The final integrated `docs/ai-learning-log.md` includes both engineers' authentic records before merge into `main`.
+
+
+## Additional AI-executed demonstration results (2026-10-14)
+
+These three demonstrations were **actually executed by the ChatGPT assistant** using Python. They are reproducible evidence of the examples, **not personal verification by Engineer A**, and should not be described as such during the audit.
+
+1. **Boolean type check (unrelated Python experiment):** Evaluated `isinstance(True, int), type(True) is int`. Actual output: `True False`. This shows why plain `isinstance(x, int)` includes booleans, while exact-type checks do not.
+2. **Ordered classification (unrelated book-request example):** Used a separate `label(level, people)` function with a first rule `urgent AND people >= 10 → critical`, followed by `urgent OR people >= 10 → high`. Actual output: `('urgent', 10) → critical; ('urgent', 2) → high; ('normal', 10) → high`. This demonstrates priority-rule precedence.
+3. **No-mutation rejection (unrelated book-library example):** A sample `books=[{'title':'Math','copies':2}]` was deep-copied. A request for zero copies raised `ValueError('positive copies required')` before the assignment. Actual output: `positive copies required unchanged: True`.
+
+**Engineer A still needs to:** personally inspect or rerun these examples, predict the results, explain the code, record their own observations and exact learning questions, and confirm the log before it is treated as individual learning evidence.
