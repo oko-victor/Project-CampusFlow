@@ -62,17 +62,14 @@ class EngineerBTests(unittest.TestCase):
         self.assertEqual([t["id"] for t in work_queue(self.tickets)], ["T002"])
 
     def test_queue_priority_and_numeric_id_tie_break(self):
-        # All tickets have the same priority: lexical order would put T010
-        # before T002, while numeric order must place T002 first.
-        for number in range(2, 11):
-            create_ticket(self.tickets, f"Ticket {number}", "Other", "high", 12)
+        # T001–T999 are zero-padded and sort lexically as well as numerically.
+        # The width changes at T1000: a lexical sort puts T1000 before T999.
+        for number in range(2, 1001):
+            create_ticket(self.tickets, f"Ticket {number}", "Network", "high", 12)
         self.tickets.reverse()
-        self.assertEqual(
-            [ticket["id"] for ticket in work_queue(self.tickets)],
-            [f"T{number:03d}" for number in range(1, 11)],
-        )
         ids = [ticket["id"] for ticket in work_queue(self.tickets)]
-        self.assertLess(ids.index("T002"), ids.index("T010"))
+        self.assertEqual(ids, [f"T{number:03d}" for number in range(1, 1001)])
+        self.assertLess(ids.index("T999"), ids.index("T1000"))
 
     def test_queue_does_not_mutate_source_order(self):
         create_ticket(self.tickets, "Mouse", "Hardware", "low", 1)
