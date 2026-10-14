@@ -1,5 +1,6 @@
 """Engineer B regression tests for workflow, queue, and reporting."""
 import unittest
+from copy import deepcopy
 
 from campusflow.tickets import create_ticket
 from campusflow.workflow import assign_ticket, change_status
@@ -14,9 +15,10 @@ class EngineerBTests(unittest.TestCase):
     def test_blank_and_non_string_assignees_do_not_mutate(self):
         for staff in (" ", None, 7):
             with self.subTest(staff=staff):
+                before = deepcopy(self.tickets)
                 with self.assertRaises(ValueError):
                     assign_ticket(self.tickets, "T001", staff)
-                self.assertIsNone(self.tickets[0]["assigned_to"])
+                self.assertEqual(self.tickets, before)
 
     def test_assignment_is_trimmed_and_reassignment_allowed(self):
         assign_ticket(self.tickets, "T001", "  Alex  ")
@@ -27,21 +29,25 @@ class EngineerBTests(unittest.TestCase):
     def test_illegal_transitions_do_not_mutate(self):
         for target in ("resolved", "open", "bogus", None, 5):
             with self.subTest(target=target):
+                before = deepcopy(self.tickets)
                 with self.assertRaises(ValueError):
                     change_status(self.tickets, "T001", target)
-                self.assertEqual(self.tickets[0]["status"], "open")
+                self.assertEqual(self.tickets, before)
 
     def test_unassigned_ticket_cannot_start(self):
+        before = deepcopy(self.tickets)
         with self.assertRaises(ValueError):
             change_status(self.tickets, "T001", "in_progress")
-        self.assertEqual(self.tickets[0]["status"], "open")
+        self.assertEqual(self.tickets, before)
 
     def test_full_lifecycle_and_resolved_assignment_block(self):
         assign_ticket(self.tickets, "T001", "Alex")
         change_status(self.tickets, "T001", " IN_PROGRESS ")
         change_status(self.tickets, "T001", "resolved")
+        before = deepcopy(self.tickets)
         with self.assertRaises(ValueError):
             assign_ticket(self.tickets, "T001", "Sam")
+        self.assertEqual(self.tickets, before)
         change_status(self.tickets, "T001", "open")
         self.assertEqual(self.tickets[0]["status"], "open")
 
@@ -56,15 +62,17 @@ class EngineerBTests(unittest.TestCase):
         self.assertEqual([t["id"] for t in work_queue(self.tickets)], ["T002"])
 
     def test_queue_priority_and_numeric_id_tie_break(self):
-        create_ticket(self.tickets, "Other critical", "Network", "high", 11)
-        create_ticket(self.tickets, "High", "Network", "high", 1)
-        create_ticket(self.tickets, "Medium", "Network", "medium", 1)
-        create_ticket(self.tickets, "Low", "Other", "low", 1)
+        # All tickets have the same priority: lexical order would put T010
+        # before T002, while numeric order must place T002 first.
+        for number in range(2, 11):
+            create_ticket(self.tickets, f"Ticket {number}", "Other", "high", 12)
         self.tickets.reverse()
         self.assertEqual(
-            [t["id"] for t in work_queue(self.tickets)],
-            ["T001", "T002", "T003", "T004", "T005"],
+            [ticket["id"] for ticket in work_queue(self.tickets)],
+            [f"T{number:03d}" for number in range(1, 11)],
         )
+        ids = [ticket["id"] for ticket in work_queue(self.tickets)]
+        self.assertLess(ids.index("T002"), ids.index("T010"))
 
     def test_queue_does_not_mutate_source_order(self):
         create_ticket(self.tickets, "Mouse", "Hardware", "low", 1)
