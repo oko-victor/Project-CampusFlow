@@ -8,13 +8,13 @@ Engineer A will add three genuine interactions, actual questions, personal verif
 
 ## Engineer B — Interaction 1: testing numeric ticket IDs
 
-- What I needed to understand: Why sorting ticket IDs as text can appear correct for T001–T005 but fail for T010.
-- Actual AI-assisted task/discussion: Create regression tests for queue priority ordering and numeric ticket ID tie-breaking; subsequent GitHub review asked for T002 and T010 with equal priorities.
-- AI explanation / reasoning used: Lexicographic comparison compares characters; a numeric tie-break extracts the integer suffix so ticket 2 sorts before ticket 10.
-- Verification performed in the project: Revised the test to create T001–T010 at equal priority, reverse the input, assert numeric order, and explicitly assert T002 precedes T010.
-- Actual output / reference: `tests/test_engineer_b.py::test_queue_priority_and_numeric_id_tie_break`; commit `a6867e4`; PR #6 follow-up review confirms the corrected test and passing GitHub Actions run https://github.com/oko-victor/Project-CampusFlow/actions/runs/38649092190.
-- Decision: Improved the original AI-assisted test because T001–T005 alone would not detect a lexical-sort bug.
-- What this demonstrates: A regression test must include a case that fails for the plausible incorrect implementation.
+- What I needed to understand: Why sorting zero-padded ticket IDs as text works through T999 but fails when IDs expand to T1000.
+- Actual AI-assisted task/discussion: Create regression tests for queue priority ordering and numeric ticket ID tie-breaking; an initial review suggested T002 and T010, but Engineer A later correctly identified T999 versus T1000 as the meaningful width-change boundary.
+- AI explanation / reasoning used: Lexicographic comparison of equal-width zero-padded IDs (such as T002 and T010) already agrees with numeric order. When ID width grows at T1000, lexical order incorrectly places T1000 before T999. Converting the suffix to an integer avoids that bug.
+- Verification performed in the project: First tested T001–T010, which did not distinguish lexical from numeric sorting. Corrected the test to create T001–T1000 at equal priority, reverse the input, assert the complete numeric order, and explicitly assert T999 precedes T1000.
+- Actual output / reference: `tests/test_engineer_b.py::test_queue_priority_and_numeric_id_tie_break`; commits `a6867e4` (earlier insufficient boundary test) and the subsequent T999/T1000 correction on PR #6. The earlier GitHub Actions run https://github.com/oko-victor/Project-CampusFlow/actions/runs/38649092190 applies to the earlier commit, **not yet to this boundary correction**.
+- Decision: Rejected the earlier AI-assisted claim that T002/T010 distinguishes lexical from numeric sorting. Adopted Engineer A's correction to test the T999/T1000 boundary.
+- What this demonstrates: Zero-padding preserves lexical/numeric agreement only while ID widths match; meaningful boundary tests must expose the actual failure mode.
 - Personal experiment: **Not recorded as run locally by Engineer B**. Engineer B must personally run or inspect the test and record what happened before claiming personal verification.
 
 ## Engineer B — Interaction 2: rejected operations and atomic state
