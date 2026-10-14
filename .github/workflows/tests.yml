@@ -1,9 +1,8 @@
 name: CampusFlow tests
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "engineer-b/**"]
   pull_request:
-    branches: [main]
 jobs:
   unittest:
     runs-on: ubuntu-latest
